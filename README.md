@@ -4,8 +4,7 @@ This repository adds VIGOR, a set of auxiliary objectives for zero-shot visual
 generalization, to [DreamerV3][dreamerv3]. Agents are trained on clean images
 and evaluated without fine-tuning on unseen visual perturbations from a visual
 generalization benchmark (VGB) built on the DeepMind Control Suite (DMC) and
-robosuite. The same code trains and evaluates the unmodified DreamerV3 agent as
-a baseline. For more details, please visit [here][vigor-gen].
+robosuite. A TD-MPC2-based variant of VIGOR ([TD-MPC2+VIGOR][tigor]) uses the same benchmark and evaluation protocol. For more details, please visit [here][vigor-gen].
 
 ## Changes from DreamerV3
 
@@ -228,3 +227,4 @@ This code builds on [DreamerV3][dreamerv3], [dm_control][dmc],
 [dcs]: https://github.com/google-research/google-research/tree/master/distracting_control
 [secant]: https://github.com/LinxiFan/SECANT
 [vigor-gen]: https://vigor-gen.github.io
+[tigor]: https://github.com/vigor-gen/tdmpc2_vigor.git
