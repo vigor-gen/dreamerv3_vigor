@@ -288,49 +288,20 @@ class DMCVGBWrapper(embodied.Wrapper):
 
   def step(self, action):
     is_reset = action['reset']
+    if is_reset:
+      # Model-level perturbations are applied before the task reset: reloading
+      # the model discards the physics state, and the reset recomputes the light
+      # positions that are rendered on the first frame.
+      self._perturb_model()
     obs = self.env.step(action)
     if is_reset:
-      reset_kwargs = {}
-      if self._gen_type == 'background_color':
-        background_color = getattr(self, f'_colors_{self._gen_diff}')[self._random_state.randint(len(getattr(self, f'_colors_{self._gen_diff}')))]
-        reset_kwargs['grid_rgb1'] = background_color['grid_rgb1']
-        reset_kwargs['skybox_rgb'] = background_color['skybox_rgb']
-        reset_kwargs['grid_rgb2'] = background_color['grid_rgb2']
-        self._reload_physics(reset_kwargs)
-      elif self._gen_type == 'background_video':
-        self._reset_video()
-        self._current_video_frame = 0
-        reset_kwargs['skybox_rgb'] = [.0, .0, .0]
-        reset_kwargs['skybox_rgb2'] = [.0, .0, .0]
-        reset_kwargs['skybox_markrgb'] = [.0, .0, .0]
-
-        if self._gen_diff == 'hard':
-          reset_kwargs['grid_rgb1'] = [.0, .0, .0]
-          reset_kwargs['grid_rgb2'] = [.0, .0, .0]
-          reset_kwargs['grid_markrgb'] = [.0, .0, .0]
-        self._reload_physics(reset_kwargs)
-      elif self._gen_type == 'cam_pos':
+      if self._gen_type == 'cam_pos':
         current_cam_xpos = self.env.physics.data.cam_xpos[self._camera_id]
         self.env.physics.data.cam_xpos[self._camera_id] = current_cam_xpos + self._cam_xpos_offset
       elif self._gen_type in ['cam_ori', 'cam_dyn']:
         self._frame_count = 0
         self._setup_camera()
         self._apply()
-      elif self._gen_type in ['light_position', 'moving_light']:
-        # theta and phi are inclination and azimuth of the spherical coordinate, respectively.
-        # theta ranges [0, 30 deg] (easy) and [30,60 deg] (hard)
-        self._theta = self._random_state.rand()*np.pi/6 if self._gen_diff == 'easy' else np.pi/6 + self._random_state.rand()*np.pi/6
-        # phi ranges [0, 360 deg]
-        self._phi = self._random_state.rand()*2*np.pi
-        self._set_light_position()
-      elif self._gen_type == 'light_color':
-        light_diffuse_range = 0.2 if self._gen_diff == 'easy' else 10
-        self.env.physics.model.light(0).diffuse = self._origin_light_diffuse + \
-            self._random_state.uniform(-light_diffuse_range,light_diffuse_range,size=self._origin_light_diffuse.shape)
-      elif self._gen_type == 'objects_color':
-        self_color = getattr(self, f'_colors_{self._gen_diff}')[self._random_state.randint(len(getattr(self, f'_colors_{self._gen_diff}')))]
-        reset_kwargs['self_rgb'] = self_color['self_rgb']
-        self._reload_physics(reset_kwargs)
 
       obs['image'] = self.render(self._image_size, self._image_size, camera_id=0, is_reset=True)
       return obs
@@ -349,6 +320,43 @@ class DMCVGBWrapper(embodied.Wrapper):
 
       obs['image'] = self.render(self._image_size, self._image_size, camera_id=0)
       return obs
+
+  def _perturb_model(self):
+    """Samples and applies the per-episode perturbation of the MuJoCo model."""
+    reset_kwargs = {}
+    if self._gen_type == 'background_color':
+      background_color = getattr(self, f'_colors_{self._gen_diff}')[self._random_state.randint(len(getattr(self, f'_colors_{self._gen_diff}')))]
+      reset_kwargs['grid_rgb1'] = background_color['grid_rgb1']
+      reset_kwargs['skybox_rgb'] = background_color['skybox_rgb']
+      reset_kwargs['grid_rgb2'] = background_color['grid_rgb2']
+      self._reload_physics(reset_kwargs)
+    elif self._gen_type == 'background_video':
+      self._reset_video()
+      self._current_video_frame = 0
+      reset_kwargs['skybox_rgb'] = [.0, .0, .0]
+      reset_kwargs['skybox_rgb2'] = [.0, .0, .0]
+      reset_kwargs['skybox_markrgb'] = [.0, .0, .0]
+
+      if self._gen_diff == 'hard':
+        reset_kwargs['grid_rgb1'] = [.0, .0, .0]
+        reset_kwargs['grid_rgb2'] = [.0, .0, .0]
+        reset_kwargs['grid_markrgb'] = [.0, .0, .0]
+      self._reload_physics(reset_kwargs)
+    elif self._gen_type in ['light_position', 'moving_light']:
+      # theta and phi are inclination and azimuth of the spherical coordinate, respectively.
+      # theta ranges [0, 30 deg] (easy) and [30,60 deg] (hard)
+      self._theta = self._random_state.rand()*np.pi/6 if self._gen_diff == 'easy' else np.pi/6 + self._random_state.rand()*np.pi/6
+      # phi ranges [0, 360 deg]
+      self._phi = self._random_state.rand()*2*np.pi
+      self._set_light_position()
+    elif self._gen_type == 'light_color':
+      light_diffuse_range = 0.2 if self._gen_diff == 'easy' else 10
+      self.env.physics.model.light(0).diffuse = self._origin_light_diffuse + \
+          self._random_state.uniform(-light_diffuse_range,light_diffuse_range,size=self._origin_light_diffuse.shape)
+    elif self._gen_type == 'objects_color':
+      self_color = getattr(self, f'_colors_{self._gen_diff}')[self._random_state.randint(len(getattr(self, f'_colors_{self._gen_diff}')))]
+      reset_kwargs['self_rgb'] = self_color['self_rgb']
+      self._reload_physics(reset_kwargs)
 
   def _interpolate_bg(self, bg, size:tuple):
     """Interpolate background to size of observation"""
