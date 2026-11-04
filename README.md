@@ -6,6 +6,12 @@ and evaluated without fine-tuning on unseen visual perturbations from a visual
 generalization benchmark (VGB) built on the DeepMind Control Suite (DMC) and
 robosuite. A TD-MPC2-based variant of VIGOR ([TD-MPC2+VIGOR][tigor]) uses the same benchmark and evaluation protocol. For more details, please visit [here][vigor-gen].
 
+![Overview](./overview.png)
+*Overview of DreamerV3+VIGOR*
+
+![RSSM](./rssm.png)
+*RSSM of DreamerV3+VIGOR*
+
 ## Changes from DreamerV3
 
 This code is based on [danijar/dreamerv3][dreamerv3] at commit
