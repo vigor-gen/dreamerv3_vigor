@@ -164,7 +164,8 @@ policy's action noise, so a condition gives the same results when rerun,
 whether it is evaluated alone or as part of the full sweep.
 
 Results are written to the log directory as `eval_avg.csv` for the full sweep,
-or `<gen_type>_<gen_diff>.csv` for a single condition. The script will not
+or `<gen_type>_<gen_diff>.csv` (DMC) / `<gen_type>.csv` (robosuite) for a
+single condition. The script will not
 overwrite an existing results file. The evaluation config is saved as
 `eval_config.yaml`.
 
