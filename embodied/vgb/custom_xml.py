@@ -117,7 +117,7 @@ class CustomMujocoXML(ET.ElementTree):
     """
     new_assets = ET.parse(filename)
     root = new_assets.getroot()
-    for child in root.getchildren():
+    for child in root:
       child.set("name", name_prefix + child.get("name"))
       elem = self.get_element_with_name(child.tag, child.get("name"))
       if elem is not None:
