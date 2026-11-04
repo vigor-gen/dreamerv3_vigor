@@ -61,13 +61,18 @@ def main(argv=None):
   )
 
   gen_type, gen_diff = config.run.gen_type, config.run.gen_diff
-  csv_name = (
-      'eval_avg.csv' if gen_type == 'all' else f'{gen_type}_{gen_diff}.csv')
+  suite, task = config.task.split('_', 1)
+  # gen_diff only applies to DMC; a robosuite condition covers all scenes.
+  if gen_type == 'all':
+    csv_name = 'eval_avg.csv'
+  elif suite == 'dmc':
+    csv_name = f'{gen_type}_{gen_diff}.csv'
+  else:
+    csv_name = f'{gen_type}.csv'
   csv_path = pathlib.Path(config.logdir) / csv_name
   if csv_path.exists():
     raise FileExistsError(f'{csv_path} already exists.')
 
-  suite, task = config.task.split('_', 1)
   seed_base = int(os.environ.get('EVAL_SEED_BASE', 25))
   seeds = [seed_base + i for i in range(NUM_SEEDS)]
 
